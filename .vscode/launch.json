@@ -10,8 +10,9 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
+            "cwd": "/home/mila/m/memariaa/alignment",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONPATH": "/home/mila/m/memariaa/alignment",
                 "HUGGINGFACE_HUB_CACHE" : "/network/scratch/m/memariaa/.cache/huggingface",
             }
 
