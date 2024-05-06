@@ -1,4 +1,4 @@
-from transformers import pipeline
+from transformers import pipeline, set_seed
 from datasets import Dataset, Image
 import os
 import torch
@@ -8,6 +8,8 @@ from transformers.pipelines.pt_utils import KeyDataset
 from tqdm.auto import tqdm
 import torch
 import os
+
+set_seed(42)
 
 if torch.cuda.is_available():
     print("Current device:", torch.cuda.current_device())
