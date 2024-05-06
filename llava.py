@@ -63,28 +63,23 @@ def llava():
     for i, out in enumerate(tqdm(vlm_pipe(**inputs))):
         answer = out[0]["generated_text"].split("ASSISTANT:")[1]
         responses["generated_text_three"].append(answer)
-        print(out, flush=True)
 
         # chekpoint
         if (i + 1) % n == 0:
             df = pd.DataFrame(responses["generated_text_three"])
             df.to_csv(f"data/responses_{i+1}_vlm.csv", index=False)
             print(f"Responses saved to responses_{i+1}_vlm.csv")
-            break
 
     inputs = {"images": key_dataset, "prompt": question_one, "generate_kwargs": {"max_new_tokens": max_new_tokens}}
     for i, out in enumerate(tqdm(vlm_pipe(**inputs))):
         answer = out[0]["generated_text"].split("ASSISTANT:")[1]
         responses["generated_text_one"].append(answer)
-        print(out, flush=True)
 
         # chekpoint
         if (i + 1) % n == 0:
             df = pd.DataFrame(responses["generated_text_one"])
             df.to_csv(f"data/responses_{i+1}_llm_one.csv", index=False)
             print(f"Responses saved to responses_{i+1}_llm_one.csv")
-
-            break
 
     question_two = [f"""
     USER:\nHere is a description of of an image (enclosed between two dollar signs):${answer}$\n\n
@@ -95,14 +90,12 @@ def llava():
     for i, out in enumerate(tqdm(text_pipe(**inputs))):
         answer = out[0]["generated_text"].split("ASSISTANT:")[1]
         responses["generated_text_two"].append(answer)
-        print(out, flush=True)
 
         # chekpoint
         if (i + 1) % n == 0:
             df = pd.DataFrame(responses["generated_text_two"])
             df.to_csv(f"data/responses_{i+1}_llm_two.csv", index=False)
             print(f"Responses saved to responses_{i+1}_llm_two.csv")
-            break
 
     return responses
 
