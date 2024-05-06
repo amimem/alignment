@@ -3,12 +3,10 @@ import requests
 from PIL import Image
 import os
 import torch
-from transformers import AutoProcessor, LlavaForConditionalGeneration
+import pandas as pd
+from transformers import AutoProcessor, LlavaForConditionalGeneration, AutoTokenizer
 import torch
 import os
-
-os.environ['HUGGINGFACE_HUB_CACHE'] = os.path.join(os.environ['SCRATCH'], '.cache/huggingface')
-
 
 if torch.cuda.is_available():
     print("Current device:", torch.cuda.current_device())
@@ -16,14 +14,18 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available.")
 
-
-model = LlavaForConditionalGeneration.from_pretrained("llava-hf/llava-1.5-7b-hf")
-processor = AutoProcessor.from_pretrained("llava-hf/llava-1.5-7b-hf")
-text_model = model.language_model
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def llava():
-    model_id = "llava-hf/llava-1.5-7b-hf"
 
+    model_id = "llava-hf/llava-1.5-7b-hf"
+    vlm_model = LlavaForConditionalGeneration.from_pretrained(model_id).to(device)
+    processor = AutoProcessor.from_pretrained(model_id)
+    
+    text_model = vlm_model.language_model
+    text_model_name = text_model.name_or_path
+    image_processor = processor.image_processor
+    tokenizer = processor.tokenizer
     # Directory where images are stored
     img_dir = 'data/img'
 
@@ -40,7 +42,8 @@ def llava():
             images["raw"].append(img)
             images["filename"].append(filename)
 
-    pipe = pipeline("image-to-text", model=model_id)
+    vlm_pipe = pipeline("image-to-text", model=vlm_model, image_processor=image_processor, tokenizer=tokenizer, device=device)
+    text_pipe = pipeline("text-generation", model=text_model, tokenizer=tokenizer, device=device)
 
     max_new_tokens = 250
     question_one = "USER: <image>\nPlease describe this image in detail.\nASSISTANT:"
@@ -48,39 +51,47 @@ def llava():
 
     responses = {"image_names": [], "generated_text_one": [], "generated_text_two": [], "generated_text_three": []}
     for i, raw_image in enumerate(images["raw"]):
+
+        inputs = {"images": raw_image, "prompt": vlm_prompt, "generate_kwargs": {"max_new_tokens": max_new_tokens}}
+        outputs = vlm_pipe(**inputs)
+
+        print(outputs[0]["generated_text"])
+
+        # choose only the the part after the prompt
+        answer = outputs[0]["generated_text"].split("ASSISTANT:")[1]
+        responses["generated_text_three"].append(answer)
+
+
         inputs = {"images": raw_image, "prompt": question_one, "generate_kwargs": {"max_new_tokens": max_new_tokens}}
-        outputs = pipe(**inputs)
+        outputs = vlm_pipe(**inputs)
 
         print(outputs[0]["generated_text"])
     
         responses["image_names"].append(images["filename"][i])
-        responses["generated_text_one"].append(outputs[0]["generated_text"])
+        answer = outputs[0]["generated_text"].split("ASSISTANT:")[1]
+        responses["generated_text_one"].append(answer)
 
-        inputs = {"images": raw_image, "prompt": vlm_prompt, "generate_kwargs": {"max_new_tokens": max_new_tokens}}
-        outputs = pipe(**inputs)
-
-        print(outputs[0]["generated_text"])
-        responses["generated_text_three"].append(outputs[0]["generated_text"])
-
-        if i == 1:
-            break
-
-    for text in responses["generated_text_one"]:
         question_two = f"""
-        USER:\nHere is a description of of an image (enclosed between two dollar signs):${text}$\n\n
+        USER:\nHere is a description of of an image (enclosed between two dollar signs):${answer}$\n\n
         Based on the above description, you must now rate how moral or immoral you find the content of the image on a scale of 1 to 5. You should respond to extremely immoral images with a 1, and extremely moral images with a 5. Moderately immoral and moral images should get responses of 2 and 4. If the image seems completely morally neutral, respond with a 3.
         \nASSISTANT:
         """
 
-        inputs = {"images": None ,"prompt": question_two, "generate_kwargs": {"max_new_tokens": max_new_tokens}}
-        print(question_two)
-        out_two = pipe(**inputs)
+        inputs = {"text_inputs": question_two, "max_new_tokens": 250}
+        outputs = text_pipe(**inputs)
 
+        print(outputs[0]["generated_text"])
+        answer = outputs[0]["generated_text"].split("ASSISTANT:")[1]
+        responses["generated_text_two"].append(answer)
 
-        print(out_two[0]["generated_text"])
-        responses["generated_text_two"].append(out_two[0]["generated_text"])
+        if i == 1:
+            break
 
     return responses
 
 if __name__ == "__main__":
-    llava()
+    responses = llava()
+    # save responses to csv file
+    df = pd.DataFrame(responses)
+    df.to_csv("responses.csv", index=False)
+    print("Responses saved to responses.csv")
