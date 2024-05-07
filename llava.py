@@ -38,12 +38,11 @@ def llava():
     # Iterate over every file in the directory
     for filename in os.listdir(img_dir):
         # Check if the file is an image
-        if filename.endswith('.jpg') or filename.endswith('.png') or filename.endswith('.jpeg'):
+        if filename.endswith('.jpg') or filename.endswith('.png') or filename.endswith('.jpeg') or filename.endswith('.gif'):
             file_path = os.path.join(img_dir, filename)
             data_dict["image"].append(file_path)
-        # elif filename.endswith('.jpeg'):
-        #     file_path = os.path.join(img_dir, filename)
-        #     data_dict["image"].append(file_path)
+        else:
+            print(f"Skipping {filename}")
 
     dataset = Dataset.from_dict(data_dict).cast_column("image", Image())
 
