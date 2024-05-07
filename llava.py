@@ -38,9 +38,12 @@ def llava():
     # Iterate over every file in the directory
     for filename in os.listdir(img_dir):
         # Check if the file is an image
-        if filename.endswith('.jpg') or filename.endswith('.png'):
+        if filename.endswith('.jpg') or filename.endswith('.png') or filename.endswith('.jpeg'):
             file_path = os.path.join(img_dir, filename)
             data_dict["image"].append(file_path)
+        # elif filename.endswith('.jpeg'):
+        #     file_path = os.path.join(img_dir, filename)
+        #     data_dict["image"].append(file_path)
 
     dataset = Dataset.from_dict(data_dict).cast_column("image", Image())
 
@@ -108,5 +111,5 @@ if __name__ == "__main__":
     print("Minimum number of items in each column:", min_len)
     for col in responses.keys():
         df[col] = responses[col][:min_len]
-    df.to_csv("data/responses.csv", index=False)
+    df.to_csv("data/responses_llava.csv", index=False)
     print("Responses saved to responses.csv")
