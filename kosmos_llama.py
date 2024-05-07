@@ -19,6 +19,8 @@ else:
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+max_new_tokens = 5
+
 def llava():
 
     model_id = "llava-hf/llava-1.5-7b-hf"
@@ -27,18 +29,18 @@ def llava():
     
     text_model = vlm_model.language_model
     text_model_name = text_model.name_or_path
-    image_processor = processor.image_processor
     tokenizer = processor.tokenizer
     # Directory where images are stored
 
-
     text_pipe = pipeline("text-generation", model=text_model, tokenizer=tokenizer, device=device)
-
-    max_new_tokens = 250
     responses = {"image_names": [], "kosmos_decriptions": [], "llama_ratings": []}
 
     # load csv file with image names and kosmos descriptions
-    df = pd.read_csv("data/results_kosmos-2-patch14-224.csv")
+    df = pd.read_csv("data/kosmos/results_kosmos-2-patch14-224.csv")
+
+    # fill responses with image names and kosmos descriptions
+    responses["image_names"] = df["image_names"].tolist()
+    responses["kosmos_decriptions"] = df["generated_text_one"].tolist()
 
     n = 100
 
@@ -47,16 +49,28 @@ def llava():
     Based on the above description, you must now rate how moral or immoral you find the content of the image on a scale of 1 to 5. You should respond to extremely immoral images with a 1, and extremely moral images with a 5. Moderately immoral and moral images should get responses of 2 and 4. If the image seems completely morally neutral, respond with a 3.
     \nASSISTANT:
     """ for answer in responses["kosmos_decriptions"]]
+
+
+    # print("Checking input data...")
+    # print(question_two["kosmos_decriptions"][:5])
+
+
+    # print("Checking model...")
+    # test_input = "USER:\nHere is a description of of an image (enclosed between two dollar signs):$Test$\n\nASSISTANT:"
+    # test_output = text_pipe(test_input, max_new_tokens=max_new_tokens)
+    # print(test_output)
+
     inputs = {"text_inputs": question_two, "max_new_tokens": max_new_tokens}
     for i, out in enumerate(tqdm(text_pipe(**inputs))):
         answer = out[0]["generated_text"].split("ASSISTANT:")[1]
-        responses["generated_text_two"].append(answer)
+        responses["llama_ratings"].append(answer)
+        # print(f"Image {i+1} rated as: {answer}")
 
         # chekpoint
         if (i + 1) % n == 0:
-            df = pd.DataFrame(responses["generated_text_two"])
-            df.to_csv(f"data/responses_{i+1}_llm_two.csv", index=False)
-            print(f"Responses saved to responses_{i+1}_llm_two.csv")
+            df = pd.DataFrame(responses["llama_ratings"])
+            df.to_csv(f"data/kosmos_to_llama_batch_{i+1}_{max_new_tokens}.csv", index=False)
+            print(f"Responses saved to kosmos_to_llama_batch_{i+1}.csv")
 
     return responses
 
@@ -69,5 +83,5 @@ if __name__ == "__main__":
     print("Minimum number of items in each column:", min_len)
     for col in responses.keys():
         df[col] = responses[col][:min_len]
-    df.to_csv("data/kosmos_to_llama.csv", index=False)
+    df.to_csv(f"data/kosmos_to_llama_{max_new_tokens}.csv", index=False)
     print("Responses saved to data/kosmos_to_llama.csv")
