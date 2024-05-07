@@ -63,7 +63,7 @@ def generate_vlm_answer(vlm_model, processor, img_batch, texts, device):
         image_embeds=None,
         image_embeds_position_mask=inputs["image_embeds_position_mask"],
         use_cache=True,
-        max_new_tokens=250,
+        max_new_tokens=max_new_tokens,
     )
 
     generated_texts = processor.batch_decode(generated_ids, skip_special_tokens=True)
@@ -131,7 +131,7 @@ for i in range(0, len(key_dataset), batch_size):
         df["generated_text_one"] = responses["generated_text_one"][:i+batch_size]
         df["generated_text_two"] = responses["generated_text_two"][:i+batch_size]
         df["generated_text_three"] = responses["generated_text_three"][:i+batch_size]
-        df.to_csv(f"data/results_batch_{i+1}_kosmos-2-patch14-224.csv", index=False)
+        df.to_csv(f"data/results_batch_{i+1}_kosmos-2-patch14-224_{max_new_tokens}.csv", index=False)
         print(f"Checkpoint saved at batch {i+1}")
 
 df = pd.DataFrame()
@@ -139,5 +139,5 @@ df["image_names"] = responses["image_names"]
 df["generated_text_one"] = responses["generated_text_one"]
 df["generated_text_two"] = responses["generated_text_two"]
 df["generated_text_three"] = responses["generated_text_three"]
-df.to_csv("data/results_kosmos-2-patch14-224_gif.csv", index=False)
+df.to_csv(f"data/results_kosmos-2-patch14-224_{max_new_tokens}.csv", index=False)
 print("Results saved to data/results_kosmos-2-patch14-224.csv")
