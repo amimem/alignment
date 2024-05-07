@@ -35,11 +35,11 @@ data_dict = {"image": []}
 # Iterate over every file in the directory
 for filename in os.listdir(img_dir):
     # Check if the file is an image
-    if filename.endswith('.jpg') or filename.endswith('.png') or filename.endswith('.jpeg'):
+    if filename.endswith('.jpg') or filename.endswith('.png') or filename.endswith('.jpeg') or filename.endswith('.gif'):
         file_path = os.path.join(img_dir, filename)
         data_dict["image"].append(file_path)
     else:
-        print(f"File {filename} is not an image")
+        print(f"Skipping {filename}")
 
 dataset = Dataset.from_dict(data_dict).cast_column("image", Image())
 
@@ -139,5 +139,5 @@ df["image_names"] = responses["image_names"]
 df["generated_text_one"] = responses["generated_text_one"]
 df["generated_text_two"] = responses["generated_text_two"]
 df["generated_text_three"] = responses["generated_text_three"]
-df.to_csv("data/results_kosmos-2-patch14-224.csv", index=False)
+df.to_csv("data/results_kosmos-2-patch14-224_gif.csv", index=False)
 print("Results saved to data/results_kosmos-2-patch14-224.csv")
