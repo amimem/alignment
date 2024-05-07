@@ -35,9 +35,11 @@ data_dict = {"image": []}
 # Iterate over every file in the directory
 for filename in os.listdir(img_dir):
     # Check if the file is an image
-    if filename.endswith('.jpg') or filename.endswith('.png'):
+    if filename.endswith('.jpg') or filename.endswith('.png') or filename.endswith('.jpeg'):
         file_path = os.path.join(img_dir, filename)
         data_dict["image"].append(file_path)
+    else:
+        print(f"File {filename} is not an image")
 
 dataset = Dataset.from_dict(data_dict).cast_column("image", Image())
 
@@ -77,7 +79,7 @@ def generate_llm_answer(text_model, tokenizer, texts, device):
         input_ids=inputs["input_ids"],
         attention_mask=inputs["attention_mask"],
         use_cache=True,
-        max_length=250,
+        max_length=256,
     )
 
     generated_texts = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
@@ -87,6 +89,13 @@ def generate_llm_answer(text_model, tokenizer, texts, device):
 
 batch_size = 16  # Set your desired batch size
 # Loop over the dataset in batches
+load = False
+if load is True:
+    df = pd.read_csv("data/results_batch_2881_kosmos-2-patch14-224_old.csv")
+    responses["generated_text_one"] = df["generated_text_one"].tolist()
+    responses["generated_text_two"] = df["generated_text_two"].tolist()
+    responses["generated_text_three"] = df["generated_text_three"].tolist()
+
 for i in range(0, len(key_dataset), batch_size):
     img_batch = key_dataset[i:i+batch_size]
     texts = [vlm_prompt] * len(img_batch)
