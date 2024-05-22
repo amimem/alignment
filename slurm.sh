@@ -3,7 +3,7 @@
 
 #SBATCH --cpus-per-task=2  # Refer to cluster's documentation for the right CPU/GPU ratio
 #SBATCH --mem=32GB       # Memory proportional to GPUs: 32000 Cedar, 47000 Béluga, 64000 Graham.
-#SBATCH --time=0-12:00:00     # DD-HH:MM:SS
+#SBATCH --time=0-00:30:00     # DD-HH:MM:SS
 #SBATCH --partition=unkillable
 #SBATCH -o /home/mila/m/memariaa/scratch/slurm-%j-%a.out
 #SBATCH -e /home/mila/m/memariaa/scratch/slurm-%j-%a.err
@@ -14,4 +14,4 @@ source ~/align/bin/activate
 
 export HUGGINGFACE_HUB_CACHE=$SCRATCH/.cache/huggingface
 
-python llava.py
+python kosmos_llama.py
