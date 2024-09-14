@@ -5,13 +5,15 @@
 #SBATCH --mem=32GB       # Memory proportional to GPUs: 32000 Cedar, 47000 Béluga, 64000 Graham.
 #SBATCH --time=0-00:30:00     # DD-HH:MM:SS
 #SBATCH --partition=unkillable
-#SBATCH -o /home/mila/m/memariaa/scratch/slurm-%j-%a.out
-#SBATCH -e /home/mila/m/memariaa/scratch/slurm-%j-%a.err
+#SBATCH -o ./scratch/slurm-%j-%a.out
+#SBATCH -e ./scratch/slurm-%j-%a.err
 
-module load python/3.10.lua
+module load python/3.10.lua libffi
 module load cudatoolkit/12.3.2
 source ~/align/bin/activate
 
 export HUGGINGFACE_HUB_CACHE=$SCRATCH/.cache/huggingface
 
-python kosmos_llama.py
+# python command to run
+# python ~/alignment/llava.py
+# pyhton ~/alignment/gpt_llama.py
