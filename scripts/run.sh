@@ -6,7 +6,8 @@
 #SBATCH -o ./scratch/slurm-%j.out
 
 module load python/3.10.lua libffi cudatoolkit/12.3.2
-
 source ~/align/bin/activate
+
+export HUGGINGFACE_HUB_CACHE=$SCRATCH/.cache/huggingface
 
 python ~/alignment/llava.py
